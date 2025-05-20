@@ -1,71 +1,144 @@
 package com.tfg.tfg.services;
 
+import com.tfg.tfg.persistance.model.WebScannerLog;
+import com.tfg.tfg.persistance.model.WebScannerResult;
+import com.tfg.tfg.persistance.repository.WebScannerLogRepository;
+import com.tfg.tfg.persistance.repository.WebScannerResultRepository;
+import jakarta.servlet.http.HttpServletRequest;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.io.IOException;
 import java.net.InetAddress;
-import org.springframework.stereotype.Service;
+import java.net.URL;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 @Service
 public class NetworkScannerService {
 
-    // Método para resolver la URL a IP
+    @Autowired
+    private WebScannerLogRepository logRepository;
+
+    @Autowired
+    private WebScannerResultRepository resultRepository;
+
+    public String scanNetwork(String target, String scanType, HttpServletRequest request) throws Exception {
+        String ip = target;
+
+        if (isValidUrl(target)) {
+            ip = resolveUrlToIp(target);
+        }
+
+        String command = buildCommand(scanType, ip);
+        Process process = Runtime.getRuntime().exec(command);
+
+        StringBuilder output = new StringBuilder();
+        try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                output.append(line).append("\n");
+            }
+        }
+
+        process.waitFor();
+        String result = output.toString();
+
+        // ✅ Guardar en web_scanner_log
+        WebScannerLog log = new WebScannerLog();
+        log.setIpAddress(getPublicIp());
+        log.setInternalIpAddress(InetAddress.getLocalHost().getHostAddress()); // ✅ IP local real
+        log.setAction("Network Scan");
+        log.setDetails(target);
+        log.setResult(result);
+        log.setToolUsed("network_scan");
+        log.setTimestamp(System.currentTimeMillis());
+        log.setUserAgent(request.getHeader("User-Agent"));
+        log.setBot(false);
+        log.setLocation(getLocation());
+
+        WebScannerLog savedLog = logRepository.save(log);
+
+        // ✅ Parsear y guardar puertos en web_scanner_result
+        List<WebScannerResult> parsedResults = new ArrayList<>();
+
+        for (String line : result.split("\n")) {
+            Matcher matcher = Pattern.compile("(\\d+/tcp)\\s+(\\w+)\\s+(\\S+)").matcher(line);
+            if (matcher.find()) {
+                WebScannerResult entry = new WebScannerResult();
+                entry.setLog(savedLog);
+                entry.setPort(matcher.group(1));
+                entry.setState(matcher.group(2));
+                entry.setService(matcher.group(3));
+                parsedResults.add(entry);
+            }
+        }
+
+        resultRepository.saveAll(parsedResults);
+
+        return result;
+    }
+
     public String resolveUrlToIp(String url) throws Exception {
         try {
-            InetAddress inetAddress = InetAddress.getByName(url);  // Resuelve la URL
-            return inetAddress.getHostAddress();  // Devuelve la dirección IP correspondiente
+            InetAddress inetAddress = InetAddress.getByName(url);
+            return inetAddress.getHostAddress();
         } catch (Exception e) {
             throw new Exception("Error al resolver la URL: " + e.getMessage());
         }
     }
 
-    // Método para realizar el escaneo de red
-    public String scanNetwork(String target, String scanType) throws Exception {
+    private boolean isValidUrl(String url) {
+        String regex = "^(https?://)?([a-z0-9-]+\\.)+[a-z0-9]{2,4}(:[0-9]{1,5})?(\\/.*)?$";
+        return url.matches(regex);
+    }
+
+    private String buildCommand(String scanType, String target) {
+        return switch (scanType) {
+            case "intermediate" -> "nmap -sV -sC -sS " + target;
+            case "deep" -> "nmap -sV -sC -T4 -A " + target;
+            default -> "nmap -sV -sC " + target;
+        };
+    }
+
+    private String getPublicIp() {
         try {
-            String ip = target;
-            
-            // Si el target es una URL, resolvemos a IP
-            if (isValidUrl(target)) {
-                ip = resolveUrlToIp(target);  // Resolver la URL a IP
+            URL url = new URL("https://api.ipify.org");
+            try (BufferedReader in = new BufferedReader(new InputStreamReader(url.openStream()))) {
+                return in.readLine();
             }
-
-            // Comando a ejecutar dependiendo del tipo de mapeo
-            String command = buildCommand(scanType, ip);
-            Process process = Runtime.getRuntime().exec(command);
-
-            // Leer la salida del proceso
-            BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
-            StringBuilder output = new StringBuilder();
-            String line;
-            while ((line = reader.readLine()) != null) {
-                output.append(line).append("\n");
-            }
-
-            // Esperar a que termine el escaneo
-            process.waitFor();
-            return output.toString();  // Retorna los resultados del escaneo
-        } catch (IOException | InterruptedException e) {
-            return "Error al ejecutar Nmap: " + e.getMessage();
+        } catch (Exception e) {
+            return "Desconocida";
         }
     }
 
-    // Función para verificar si una cadena es una URL válida
-    private boolean isValidUrl(String url) {
-        String regex = "^(https?://)?([a-z0-9-]+\\.)+[a-z0-9]{2,4}(:[0-9]{1,5})?(\\/.*)?$";
-        return url.matches(regex);  // Comprueba si es una URL válida
-    }
+    private String getLocation() {
+        try {
+            URL url = new URL("https://ipapi.co/json/");
+            try (BufferedReader in = new BufferedReader(new InputStreamReader(url.openStream()))) {
+                StringBuilder json = new StringBuilder();
+                String line;
+                while ((line = in.readLine()) != null) {
+                    json.append(line);
+                }
 
-    // Método para construir el comando de nmap basado en el tipo de escaneo
-    private String buildCommand(String scanType, String target) {
-        switch (scanType) {
-            case "basic":
-                return "nmap  -sV -sC " + target;
-            case "intermediate":
-                return "nmap -sV -sC -sS " + target;
-            case "deep":
-                return "nmap -sV -sC -T4 -A " + target;
-            default:
-                return "nmap -sV -sC " + target;  // Escaneo básico por defecto
+                String jsonStr = json.toString();
+                String city = jsonStr.matches(".*\"city\":\"[^\"]+\".*")
+                        ? jsonStr.replaceAll(".*\"city\":\"([^\"]+)\".*", "$1")
+                        : "";
+                String country = jsonStr.matches(".*\"country_name\":\"[^\"]+\".*")
+                        ? jsonStr.replaceAll(".*\"country_name\":\"([^\"]+)\".*", "$1")
+                        : "";
+
+                String loc = (city + ", " + country).trim();
+                return loc.isBlank() ? "Desconocida" : loc;
+            }
+        } catch (Exception e) {
+            return "Desconocida";
         }
     }
 }
