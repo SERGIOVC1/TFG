@@ -1,34 +1,95 @@
-// src/main/java/com/tfg/tfg/persistance/model/LinkLog.java
 package com.tfg.tfg.persistance.model;
 
-import java.time.LocalDateTime;
+import jakarta.persistence.*;
+import java.time.Instant;
 
+@Entity
+@Table(name = "link_log")
 public class LinkLog {
-    private String ip;
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @Column(name = "client_ip", nullable = false)
+    private String clientIp;
+
+    @Column(name = "server_public_ip", nullable = false)
+    private String serverPublicIp;
+
+    @Column(name = "server_local_ip", nullable = false)
+    private String serverLocalIp;
+
+    @Column(name = "user_agent", length = 1000)
     private String userAgent;
-    private LocalDateTime timestamp;
+
+    @Column(name = "code", nullable = false)
     private String code;
 
-    public LinkLog(String ip, String userAgent, String code) {
-        this.ip = ip;
+    @Column(name = "timestamp", nullable = false)
+    private Long timestamp;
+
+    public LinkLog() {}
+
+    // Constructor para conveniencia (opcional)
+    public LinkLog(String clientIp, String userAgent, String code) {
+        this.clientIp = clientIp;
         this.userAgent = userAgent;
-        this.timestamp = LocalDateTime.now();
         this.code = code;
+        this.timestamp = Instant.now().toEpochMilli();
+        this.serverPublicIp = "Desconocida";
+        this.serverLocalIp = "Desconocida";
     }
 
-    public String getIp() {
-        return ip;
+    public Long getId() {
+        return id;
+    }
+
+    public String getClientIp() {
+        return clientIp;
+    }
+
+    public void setClientIp(String clientIp) {
+        this.clientIp = clientIp;
+    }
+
+    public String getServerPublicIp() {
+        return serverPublicIp;
+    }
+
+    public void setServerPublicIp(String serverPublicIp) {
+        this.serverPublicIp = serverPublicIp;
+    }
+
+    public String getServerLocalIp() {
+        return serverLocalIp;
+    }
+
+    public void setServerLocalIp(String serverLocalIp) {
+        this.serverLocalIp = serverLocalIp;
     }
 
     public String getUserAgent() {
         return userAgent;
     }
 
-    public LocalDateTime getTimestamp() {
-        return timestamp;
+    public void setUserAgent(String userAgent) {
+        this.userAgent = userAgent;
     }
 
     public String getCode() {
         return code;
+    }
+
+    public void setCode(String code) {
+        this.code = code;
+    }
+
+    public Long getTimestamp() {
+        return timestamp;
+    }
+
+    public void setTimestamp(Long timestamp) {
+        this.timestamp = timestamp;
     }
 }
