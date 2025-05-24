@@ -18,6 +18,9 @@ public class AuditLog {
     @Column(name = "table_name")
     private String tableName;
 
+    @Column(name = "record_id")
+    private Long recordId;  // <-- Nuevo campo agregado
+
     private Instant timestamp;
 
     private String details;
@@ -35,6 +38,9 @@ public class AuditLog {
 
     public String getTableName() { return tableName; }
     public void setTableName(String tableName) { this.tableName = tableName; }
+
+    public Long getRecordId() { return recordId; }
+    public void setRecordId(Long recordId) { this.recordId = recordId; }
 
     public Instant getTimestamp() { return timestamp; }
     public void setTimestamp(Instant timestamp) { this.timestamp = timestamp; }

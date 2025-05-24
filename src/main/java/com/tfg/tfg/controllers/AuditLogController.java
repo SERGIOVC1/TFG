@@ -16,7 +16,6 @@ public class AuditLogController {
     @Autowired
     private AuditLogService auditLogService;
 
-    // Endpoint para obtener logs filtrados por usuario
     @GetMapping("/user/{userId}")
     public ResponseEntity<List<AuditLogDto>> getAuditLogsForUser(@PathVariable String userId) {
         List<AuditLogDto> logs = auditLogService.getAuditLogsByUser(userId);

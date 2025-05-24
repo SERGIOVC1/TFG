@@ -22,6 +22,7 @@ public class AuditLogService {
         return logs.stream().map(log -> new AuditLogDto(
                 log.getAction(),
                 log.getTableName(),
+                log.getRecordId(),  
                 log.getTimestamp(),
                 log.getDetails()
         )).collect(Collectors.toList());

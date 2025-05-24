@@ -6,13 +6,15 @@ public class AuditLogDto {
 
     private String action;
     private String tableName;
+    private Long recordId;  // nuevo campo
     private Instant timestamp;
     private String details;
 
     // Constructor
-    public AuditLogDto(String action, String tableName, Instant timestamp, String details) {
+    public AuditLogDto(String action, String tableName, Long recordId, Instant timestamp, String details) {
         this.action = action;
         this.tableName = tableName;
+        this.recordId = recordId;
         this.timestamp = timestamp;
         this.details = details;
     }
@@ -24,6 +26,9 @@ public class AuditLogDto {
 
     public String getTableName() { return tableName; }
     public void setTableName(String tableName) { this.tableName = tableName; }
+
+    public Long getRecordId() { return recordId; }
+    public void setRecordId(Long recordId) { this.recordId = recordId; }
 
     public Instant getTimestamp() { return timestamp; }
     public void setTimestamp(Instant timestamp) { this.timestamp = timestamp; }
