@@ -5,7 +5,7 @@ public class WhoisLogRequest {
     private String domain;
     private String whoisResult;
     private String toolUsed;
-    private Long timestamp;
+    private Long timestamp;  // Sigue siendo Long (epoch millis) aquí
     private String userAgent;
     private boolean isBot;
     private String location;

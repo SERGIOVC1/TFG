@@ -1,6 +1,7 @@
 package com.tfg.tfg.persistance.model;
 
 import jakarta.persistence.*;
+import java.time.OffsetDateTime;
 
 @Entity
 @Table(name = "ipresolver_log")
@@ -21,7 +22,7 @@ public class Ipresolver {
     @Column(name = "tool_used")
     private String toolUsed;
 
-    private Long timestamp;
+    private OffsetDateTime timestamp;
 
     @Column(name = "user_agent")
     private String userAgent;
@@ -77,11 +78,11 @@ public class Ipresolver {
         this.toolUsed = toolUsed;
     }
 
-    public Long getTimestamp() {
+    public OffsetDateTime getTimestamp() {
         return timestamp;
     }
 
-    public void setTimestamp(Long timestamp) {
+    public void setTimestamp(OffsetDateTime timestamp) {
         this.timestamp = timestamp;
     }
 

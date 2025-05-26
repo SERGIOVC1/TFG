@@ -1,6 +1,7 @@
 package com.tfg.tfg.persistance.model;
 
 import jakarta.persistence.*;
+import java.time.Instant;
 
 @Entity
 @Table(name = "whois_log")
@@ -18,7 +19,8 @@ public class WhoisLog {
     @Column(name = "tool_used")
     private String toolUsed;
 
-    private Long timestamp;
+    @Column(name = "timestamp")
+    private Instant timestamp;  // Cambiado a Instant
 
     @Column(name = "user_agent")
     private String userAgent;
@@ -37,6 +39,7 @@ public class WhoisLog {
     private String ipAddress;
 
     // Getters y Setters
+
     public Long getId() {
         return id;
     }
@@ -69,11 +72,11 @@ public class WhoisLog {
         this.toolUsed = toolUsed;
     }
 
-    public Long getTimestamp() {
+    public Instant getTimestamp() {
         return timestamp;
     }
 
-    public void setTimestamp(Long timestamp) {
+    public void setTimestamp(Instant timestamp) {
         this.timestamp = timestamp;
     }
 
