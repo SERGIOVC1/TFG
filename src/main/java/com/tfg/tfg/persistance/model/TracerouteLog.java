@@ -1,6 +1,7 @@
 package com.tfg.tfg.persistance.model;
 
 import jakarta.persistence.*;
+import java.time.Instant;
 import java.util.List;
 
 @Entity
@@ -18,12 +19,14 @@ public class TracerouteLog {
 
     private String toolUsed;
 
-    private Long timestamp;
+    @Column(columnDefinition = "timestamp with time zone")
+    private Instant timestamp;
 
     private String userAgent;
 
     private Boolean isBot;
 
+    @Column(columnDefinition = "TEXT")
     private String location;
 
     private String ipAddress;
@@ -32,7 +35,7 @@ public class TracerouteLog {
 
     private String action;
 
-    @OneToMany(mappedBy = "tracerouteLog", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "tracerouteLog", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<TracerouteLogResult> results;
 
     // Getters y setters
@@ -48,8 +51,8 @@ public class TracerouteLog {
     public String getToolUsed() { return toolUsed; }
     public void setToolUsed(String toolUsed) { this.toolUsed = toolUsed; }
 
-    public Long getTimestamp() { return timestamp; }
-    public void setTimestamp(Long timestamp) { this.timestamp = timestamp; }
+    public Instant getTimestamp() { return timestamp; }
+    public void setTimestamp(Instant timestamp) { this.timestamp = timestamp; }
 
     public String getUserAgent() { return userAgent; }
     public void setUserAgent(String userAgent) { this.userAgent = userAgent; }

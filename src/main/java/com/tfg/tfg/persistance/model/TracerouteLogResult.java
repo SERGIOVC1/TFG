@@ -18,8 +18,8 @@ public class TracerouteLogResult {
 
     private String provider;
 
-    @ManyToOne
-    @JoinColumn(name = "traceroute_log_id")
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "traceroute_log_id", nullable = false)
     private TracerouteLog tracerouteLog;
 
     // Getters y setters

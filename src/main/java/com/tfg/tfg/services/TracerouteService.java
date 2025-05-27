@@ -11,6 +11,7 @@ import java.net.InetAddress;
 import java.net.URL;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -64,8 +65,6 @@ public class TracerouteService {
         List<String> tracerouteOutput = new ArrayList<>();
 
         // Aquí agregarías el código real para ejecutar traceroute y obtener el output (simulación)
-        // Por ejemplo, llamando a un proceso externo o usando librerías Java que hagan traceroute.
-        // Para el ejemplo, añadimos salida simulada:
         tracerouteOutput.add("142.250.184.174 Madrid, Spain Google");
         tracerouteOutput.add("212.166.147.222 Madrid, Spain Desconocido");
         tracerouteOutput.add("108.170.252.253 Montreal, Canada Google");
@@ -76,7 +75,7 @@ public class TracerouteService {
             log.setTarget(target);
             log.setResult(String.join("\n", tracerouteOutput));
             log.setToolUsed("traceroute");
-            log.setTimestamp(System.currentTimeMillis());
+            log.setTimestamp(Instant.now());  // <-- Cambiado a Instant
             log.setUserAgent(System.getProperty("http.agent"));
             log.setIsBot(false);
             log.setIpAddress(getPublicIp());
