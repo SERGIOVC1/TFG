@@ -1,49 +1,18 @@
-package com.tfg.tfg.persistance.model;
+package com.tfg.tfg.dto;
 
-import jakarta.persistence.*;
-import java.time.Instant;
+public class HoleheLogRequest {
 
-@Entity
-@Table(name = "holehe_log")
-public class HoleheLog {
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
-
-    @Column(name = "ip_address")
     private String ipAddress;
-
-    @Column(name = "internal_ip_address")
-    private String internalIpAddress;
-
     private String action;
     private String details;
     private String result;
-
-    @Column(name = "tool_used")
     private String toolUsed;
-
-    @Column(name = "timestamp")
-    private Instant timestamp;  // Cambiado a Instant para manejar timestamp con zona
-
-    @Column(name = "user_agent")
+    private Long timestamp;          // Epoch millis
     private String userAgent;
-
-    @Column(name = "is_bot")
     private boolean isBot;
-
     private String location;
 
     // Getters y Setters
-
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
 
     public String getIpAddress() {
         return ipAddress;
@@ -51,14 +20,6 @@ public class HoleheLog {
 
     public void setIpAddress(String ipAddress) {
         this.ipAddress = ipAddress;
-    }
-
-    public String getInternalIpAddress() {
-        return internalIpAddress;
-    }
-
-    public void setInternalIpAddress(String internalIpAddress) {
-        this.internalIpAddress = internalIpAddress;
     }
 
     public String getAction() {
@@ -93,11 +54,11 @@ public class HoleheLog {
         this.toolUsed = toolUsed;
     }
 
-    public Instant getTimestamp() {
+    public Long getTimestamp() {
         return timestamp;
     }
 
-    public void setTimestamp(Instant timestamp) {
+    public void setTimestamp(Long timestamp) {
         this.timestamp = timestamp;
     }
 
@@ -113,8 +74,8 @@ public class HoleheLog {
         return isBot;
     }
 
-    public void setIsBot(boolean isBot) {
-        this.isBot = isBot;
+    public void setBot(boolean bot) {
+        isBot = bot;
     }
 
     public String getLocation() {

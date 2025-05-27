@@ -1,6 +1,7 @@
 package com.tfg.tfg.persistance.model;
 
 import jakarta.persistence.*;
+import java.time.Instant;
 
 @Entity
 @Table(name = "web_scanner_log")
@@ -26,7 +27,8 @@ public class WebScannerLog {
     @Column(name = "tool_used")
     private String toolUsed;
 
-    private Long timestamp;
+    @Column(columnDefinition = "TIMESTAMP WITH TIME ZONE")
+    private Instant timestamp;
 
     @Column(name = "user_agent", columnDefinition = "TEXT")
     private String userAgent;
@@ -95,11 +97,11 @@ public class WebScannerLog {
         this.toolUsed = toolUsed;
     }
 
-    public Long getTimestamp() {
+    public Instant getTimestamp() {
         return timestamp;
     }
 
-    public void setTimestamp(Long timestamp) {
+    public void setTimestamp(Instant timestamp) {
         this.timestamp = timestamp;
     }
 

@@ -10,9 +10,9 @@ import org.springframework.stereotype.Service;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
-import java.io.IOException;
 import java.net.InetAddress;
 import java.net.URL;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
@@ -34,7 +34,11 @@ public class NetworkScannerService {
             ip = resolveUrlToIp(target);
         }
 
+        // Construimos el comando y agregamos opción para excluir código 301 en Gobuster si usas Gobuster
+        // Si usas nmap solo, esta opción no aplica.
+        // Para ejemplo con nmap:
         String command = buildCommand(scanType, ip);
+
         Process process = Runtime.getRuntime().exec(command);
 
         StringBuilder output = new StringBuilder();
@@ -48,22 +52,22 @@ public class NetworkScannerService {
         process.waitFor();
         String result = output.toString();
 
-        // ✅ Guardar en web_scanner_log
+        // Guardar log en base de datos
         WebScannerLog log = new WebScannerLog();
         log.setIpAddress(getPublicIp());
-        log.setInternalIpAddress(InetAddress.getLocalHost().getHostAddress()); // ✅ IP local real
+        log.setInternalIpAddress(InetAddress.getLocalHost().getHostAddress());
         log.setAction("Network Scan");
         log.setDetails(target);
         log.setResult(result);
         log.setToolUsed("network_scan");
-        log.setTimestamp(System.currentTimeMillis());
+        log.setTimestamp(Instant.now());  // Asegúrate que WebScannerLog tenga Instant para timestamp
         log.setUserAgent(request.getHeader("User-Agent"));
         log.setBot(false);
         log.setLocation(getLocation());
 
         WebScannerLog savedLog = logRepository.save(log);
 
-        // ✅ Parsear y guardar puertos en web_scanner_result
+        // Parsear puertos y guardar resultados (solo si usas nmap)
         List<WebScannerResult> parsedResults = new ArrayList<>();
 
         for (String line : result.split("\n")) {
@@ -98,6 +102,7 @@ public class NetworkScannerService {
     }
 
     private String buildCommand(String scanType, String target) {
+        // Ejemplo usando nmap (modifica si usas gobuster o similar)
         return switch (scanType) {
             case "intermediate" -> "nmap -sV -sC -sS " + target;
             case "deep" -> "nmap -sV -sC -T4 -A " + target;

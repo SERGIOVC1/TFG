@@ -9,6 +9,7 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.InputStreamReader;
 import java.net.InetAddress;
+import java.time.Instant;
 
 @Service
 public class HoleheService {
@@ -62,7 +63,7 @@ public class HoleheService {
                 log.setInternalIpAddress(InetAddress.getLocalHost().getHostAddress());
                 log.setResult(result);
                 log.setToolUsed("holehe");
-                log.setTimestamp(System.currentTimeMillis());
+                log.setTimestamp(Instant.ofEpochMilli(System.currentTimeMillis()));  // <-- Cambio aquí
                 log.setUserAgent(System.getProperty("http.agent"));
                 log.setIsBot(false);
                 log.setLocation(getLocation());

@@ -83,18 +83,28 @@ public class NetworkController {
             String internalIp = servletRequest.getRemoteAddr();
 
             WebScannerLog log = new WebScannerLog();
+            // Dentro del método saveScanLog
+
             log.setIpAddress(request.getIpAddress());
             log.setInternalIpAddress(internalIp);
             log.setAction(request.getAction());
             log.setDetails(request.getDetails());
             log.setResult(request.getResult());
             log.setToolUsed(request.getToolUsed());
-            log.setTimestamp(request.getTimestamp());
+
+            // Convertir Long timestamp a Instant
+            if (request.getTimestamp() != null) {
+                log.setTimestamp(java.time.Instant.ofEpochMilli(request.getTimestamp()));
+            } else {
+                log.setTimestamp(java.time.Instant.now());
+            }
+
             log.setUserAgent(request.getUserAgent());
             log.setBot(request.isBot());
             log.setLocation(request.getLocation());
 
             webScannerLogRepository.save(log);
+
             return ResponseEntity.ok("Log guardado correctamente");
 
         } catch (Exception e) {

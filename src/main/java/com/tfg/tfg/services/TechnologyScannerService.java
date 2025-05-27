@@ -9,9 +9,10 @@ import org.springframework.stereotype.Service;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
-import java.net.HttpURLConnection;
 import java.net.InetAddress;
+import java.net.HttpURLConnection;
 import java.net.URL;
+import java.time.Instant;
 import java.util.*;
 
 @Service
@@ -77,7 +78,7 @@ public class TechnologyScannerService {
 
                 if ("set-cookie".equalsIgnoreCase(key)) {
                     if (value.contains("wp-settings")) techs.put("CMS", "WordPress");
-                    if (value.contains("XSRF-TOKEN".toLowerCase())) techs.put("Framework", "Laravel");
+                    if (value.contains("xsrf-token")) techs.put("Framework", "Laravel");
                     if (value.contains("csrftoken")) techs.put("Framework", "Django");
                 }
             });
@@ -110,7 +111,7 @@ public class TechnologyScannerService {
             TechLog log = new TechLog();
             log.setUrl(inputUrl);
             log.setToolUsed("technology_scan");
-            log.setTimestamp(System.currentTimeMillis());
+            log.setTimestamp(Instant.now());  // Aquí Instant en lugar de Long
             log.setUserAgent(System.getProperty("http.agent"));
             log.setIsBot(false);
             log.setIpAddress(getPublicIp());
