@@ -11,6 +11,7 @@ public class AuditLog {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(name = "user_id")
     private String userId; // Identificador del usuario (puede ser username o id)
 
     private String action;
@@ -19,32 +20,67 @@ public class AuditLog {
     private String tableName;
 
     @Column(name = "record_id")
-    private Long recordId;  // <-- Nuevo campo agregado
+    private Long recordId;
 
-    private Instant timestamp;
+    private Instant timestamp;  // <-- Usando Instant para marca temporal
 
     private String details;
 
     // Getters y setters
 
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
+    public Long getId() {
+        return id;
+    }
 
-    public String getUserId() { return userId; }
-    public void setUserId(String userId) { this.userId = userId; }
+    public void setId(Long id) {
+        this.id = id;
+    }
 
-    public String getAction() { return action; }
-    public void setAction(String action) { this.action = action; }
+    public String getUserId() {
+        return userId;
+    }
 
-    public String getTableName() { return tableName; }
-    public void setTableName(String tableName) { this.tableName = tableName; }
+    public void setUserId(String userId) {
+        this.userId = userId;
+    }
 
-    public Long getRecordId() { return recordId; }
-    public void setRecordId(Long recordId) { this.recordId = recordId; }
+    public String getAction() {
+        return action;
+    }
 
-    public Instant getTimestamp() { return timestamp; }
-    public void setTimestamp(Instant timestamp) { this.timestamp = timestamp; }
+    public void setAction(String action) {
+        this.action = action;
+    }
 
-    public String getDetails() { return details; }
-    public void setDetails(String details) { this.details = details; }
+    public String getTableName() {
+        return tableName;
+    }
+
+    public void setTableName(String tableName) {
+        this.tableName = tableName;
+    }
+
+    public Long getRecordId() {
+        return recordId;
+    }
+
+    public void setRecordId(Long recordId) {
+        this.recordId = recordId;
+    }
+
+    public Instant getTimestamp() {
+        return timestamp;
+    }
+
+    public void setTimestamp(Instant timestamp) {
+        this.timestamp = timestamp;
+    }
+
+    public String getDetails() {
+        return details;
+    }
+
+    public void setDetails(String details) {
+        this.details = details;
+    }
 }
