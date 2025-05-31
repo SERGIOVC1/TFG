@@ -3,8 +3,7 @@ package com.tfg.tfg.controllers;
 import com.tfg.tfg.persistance.model.HoleheLog;
 import com.tfg.tfg.persistance.repository.HoleheLogRepository;
 import com.tfg.tfg.services.HoleheService;
-import com.tfg.tfg.dto.HoleheLogRequest;  // Te recomiendo crear este DTO similar al WhoisLogRequest
-import jakarta.servlet.http.HttpServletRequest;
+import com.tfg.tfg.dto.HoleheLogRequest;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -35,6 +34,7 @@ public class HoleheController {
             String internalIp = InetAddress.getLocalHost().getHostAddress();
 
             HoleheLog log = new HoleheLog();
+            log.setUserId(request.getUserId());  // <-- Asignar userId recibido
             log.setIpAddress(request.getIpAddress());
             log.setInternalIpAddress(internalIp);
             log.setAction(request.getAction());

@@ -11,6 +11,9 @@ public class HoleheLog {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(name = "user_id")  // Añadido para guardar userId
+    private String userId;
+
     @Column(name = "ip_address")
     private String ipAddress;
 
@@ -43,6 +46,14 @@ public class HoleheLog {
 
     public void setId(Long id) {
         this.id = id;
+    }
+
+    public String getUserId() {
+        return userId;
+    }
+
+    public void setUserId(String userId) {
+        this.userId = userId;
     }
 
     public String getIpAddress() {

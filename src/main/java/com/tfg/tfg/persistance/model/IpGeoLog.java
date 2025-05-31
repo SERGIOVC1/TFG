@@ -10,6 +10,9 @@ public class IpGeoLog {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(name = "user_id")    // Añadido userId
+    private String userId;
+
     @Column(name = "ip_address")
     private String ipAddress;
 
@@ -32,8 +35,12 @@ public class IpGeoLog {
     private String internalIpAddress;
 
     // Getters y Setters
+
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
+
+    public String getUserId() { return userId; }
+    public void setUserId(String userId) { this.userId = userId; }
 
     public String getIpAddress() { return ipAddress; }
     public void setIpAddress(String ipAddress) { this.ipAddress = ipAddress; }

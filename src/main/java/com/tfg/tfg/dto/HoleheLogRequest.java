@@ -2,6 +2,8 @@ package com.tfg.tfg.dto;
 
 public class HoleheLogRequest {
 
+    private String userId;  // <-- Nuevo campo para guardar userId
+
     private String ipAddress;
     private String action;
     private String details;
@@ -13,6 +15,14 @@ public class HoleheLogRequest {
     private String location;
 
     // Getters y Setters
+
+    public String getUserId() {
+        return userId;
+    }
+
+    public void setUserId(String userId) {
+        this.userId = userId;
+    }
 
     public String getIpAddress() {
         return ipAddress;
