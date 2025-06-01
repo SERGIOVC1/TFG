@@ -26,7 +26,8 @@ public class HeadersLogService {
     @Autowired
     private HeadersLogResultRepository headersLogResultRepository;
 
-    public Map<String, String> analyzeAndSave(String url) {
+    // Método actualizado para recibir userId
+    public Map<String, String> analyzeAndSave(String url, String userId) {
         Map<String, String> resultHeaders = null;
 
         try {
@@ -46,9 +47,10 @@ public class HeadersLogService {
                 "Permissions-Policy"
             };
 
-            // Guardar log principal
+            // Guardar log principal con userId
             HeadersLog log = new HeadersLog();
             log.setUrl(url);
+            log.setUserId(userId != null ? userId : "desconocido"); // Guarda userId o "desconocido"
             log.setToolUsed("header_analysis");
             log.setTimestamp(System.currentTimeMillis());
             log.setUserAgent(System.getProperty("http.agent"));
@@ -66,7 +68,7 @@ public class HeadersLogService {
                 if (value == null) {
                     value = "❌ No establecido";
                 }
-                value = sanitizeUtf8(value); // Limpiar texto antes de guardar
+                value = sanitizeUtf8(value);
 
                 HeadersLogResult result = new HeadersLogResult();
                 result.setHeader(key);
@@ -91,7 +93,6 @@ public class HeadersLogService {
         return resultHeaders;
     }
 
-    // Método para eliminar caracteres no ASCII que pueden causar problemas
     private static String sanitizeUtf8(String input) {
         if (input == null) return null;
         return input.replaceAll("[^\\x00-\\x7F]", "");
@@ -119,11 +120,8 @@ public class HeadersLogService {
                 }
 
                 String jsonStr = json.toString();
-
-                String city = jsonStr.matches(".*\"city\":\"[^\"]+\".*")
-                    ? jsonStr.replaceAll(".*\"city\":\"([^\"]+)\".*", "$1") : "";
-                String country = jsonStr.matches(".*\"country_name\":\"[^\"]+\".*")
-                    ? jsonStr.replaceAll(".*\"country_name\":\"([^\"]+)\".*", "$1") : "";
+                String city = jsonStr.matches(".*\"city\":\"[^\"]+\".*") ? jsonStr.replaceAll(".*\"city\":\"([^\"]+)\".*", "$1") : "";
+                String country = jsonStr.matches(".*\"country_name\":\"[^\"]+\".*") ? jsonStr.replaceAll(".*\"country_name\":\"([^\"]+)\".*", "$1") : "";
 
                 String loc = (city + ", " + country).trim();
                 return loc.isBlank() ? "Desconocida" : loc;

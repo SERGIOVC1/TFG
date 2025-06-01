@@ -1,5 +1,7 @@
 package com.tfg.tfg.services;
 
+// package com.tfg.tfg.services;
+
 import com.tfg.tfg.persistance.model.TracerouteLog;
 import com.tfg.tfg.persistance.model.TracerouteLogResult;
 import com.tfg.tfg.persistance.repository.TracerouteLogRepository;
@@ -24,7 +26,6 @@ public class TracerouteService {
     @Autowired
     private TracerouteLogResultRepository tracerouteLogResultRepository;
 
-    // Método para obtener IP pública
     private String getPublicIp() {
         try {
             URL url = new URL("https://api.ipify.org");
@@ -36,7 +37,6 @@ public class TracerouteService {
         }
     }
 
-    // Método para obtener ubicación del cliente
     private String getLocation() {
         try {
             URL url = new URL("https://ipapi.co/json/");
@@ -61,21 +61,20 @@ public class TracerouteService {
         }
     }
 
-    public List<String> executeTraceroute(String target) {
+    public List<String> executeTraceroute(String target, String userId) {
         List<String> tracerouteOutput = new ArrayList<>();
 
-        // Aquí agregarías el código real para ejecutar traceroute y obtener el output (simulación)
+        // Simulación del traceroute (reemplaza por ejecución real si tienes)
         tracerouteOutput.add("142.250.184.174 Madrid, Spain Google");
         tracerouteOutput.add("212.166.147.222 Madrid, Spain Desconocido");
         tracerouteOutput.add("108.170.252.253 Montreal, Canada Google");
 
-        // Guardar log y resultados en base de datos
         try {
             TracerouteLog log = new TracerouteLog();
             log.setTarget(target);
             log.setResult(String.join("\n", tracerouteOutput));
             log.setToolUsed("traceroute");
-            log.setTimestamp(Instant.now());  // <-- Cambiado a Instant
+            log.setTimestamp(Instant.now());
             log.setUserAgent(System.getProperty("http.agent"));
             log.setIsBot(false);
             log.setIpAddress(getPublicIp());
@@ -83,12 +82,14 @@ public class TracerouteService {
             log.setLocation(getLocation());
             log.setAction("Traceroute ejecutado");
 
+            if (userId != null && !userId.isEmpty()) {
+                log.setUserId(userId);
+            }
+
             TracerouteLog savedLog = tracerouteLogRepository.save(log);
 
-            // Parsear y guardar cada salto
             List<TracerouteLogResult> results = new ArrayList<>();
             for (String line : tracerouteOutput) {
-                // Suponemos formato: "IP Ciudad País Proveedor"
                 String[] parts = line.split(" ", 4);
                 if (parts.length == 4) {
                     TracerouteLogResult res = new TracerouteLogResult();
@@ -107,5 +108,13 @@ public class TracerouteService {
         }
 
         return tracerouteOutput;
+    }
+
+    public List<TracerouteLog> getLogsByUserId(String userId) {
+        if (userId == null || userId.isEmpty()) {
+            return tracerouteLogRepository.findAll();
+        } else {
+            return tracerouteLogRepository.findByUserId(userId);
+        }
     }
 }

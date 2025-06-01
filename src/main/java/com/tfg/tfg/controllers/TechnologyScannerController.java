@@ -8,7 +8,7 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/tech-scan")
-@CrossOrigin(origins = "*") // puedes restringir si quieres
+@CrossOrigin(origins = "*")
 public class TechnologyScannerController {
 
     private final TechnologyScannerService scannerService;
@@ -18,8 +18,9 @@ public class TechnologyScannerController {
     }
 
     @GetMapping
-    public ResponseEntity<Map<String, String>> scan(@RequestParam String domain) {
-        Map<String, String> result = scannerService.analyzeWebsite(domain);
+    public ResponseEntity<Map<String, String>> scan(@RequestParam String domain,
+                                                    @RequestParam(required = false) String userId) {
+        Map<String, String> result = scannerService.analyzeWebsite(domain, userId);
         return ResponseEntity.ok(result);
     }
 }

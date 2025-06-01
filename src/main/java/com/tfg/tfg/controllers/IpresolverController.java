@@ -2,37 +2,55 @@ package com.tfg.tfg.controllers;
 
 import com.tfg.tfg.persistance.model.Ipresolver;
 import com.tfg.tfg.persistance.repository.IpresolverLogRepository;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.net.InetAddress;
+import java.time.OffsetDateTime;
+import java.util.HashMap;
+import java.util.Map;
+
 @RestController
 @RequestMapping("/api/ipresolver")
+@CrossOrigin(origins = "*")
 public class IpresolverController {
 
     @Autowired
     private IpresolverLogRepository ipresolverLogRepository;
 
-    @PostMapping("/log")
-    public ResponseEntity<?> log(@RequestBody Ipresolver log) {
+    // Endpoint para resolver IP de un dominio
+    @GetMapping("/resolve-ip")
+    public ResponseEntity<Map<String, String>> resolveIp(@RequestParam String domain) {
         try {
-            System.out.println("📥 [DEBUG] Petición recibida:");
-            System.out.println("➡ IP externa: " + log.getIpAddress());
-            System.out.println("➡ IP interna: " + log.getInternalIpAddress());
-            System.out.println("➡ Acción: " + log.getAction());
-            System.out.println("➡ Detalles: " + log.getDetails());
-            System.out.println("➡ Resultado: " + log.getResult());
-            System.out.println("➡ User Agent: " + log.getUserAgent());
-            System.out.println("➡ Is Bot: " + log.getIsBot());
-            System.out.println("➡ Ubicación: " + log.getLocation());
-            System.out.println("➡ Timestamp: " + log.getTimestamp());
+            InetAddress inetAddress = InetAddress.getByName(domain);
+            String ip = inetAddress.getHostAddress();
+            Map<String, String> response = new HashMap<>();
+            response.put("ip", ip);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest()
+                    .body(Map.of("error", "No se pudo resolver la IP para el dominio: " + domain));
+        }
+    }
+
+    // Endpoint para guardar logs de IP resolver
+    @PostMapping("/log")
+    public ResponseEntity<?> log(@RequestBody Ipresolver log, HttpServletRequest servletRequest) {
+        try {
+            // Guardar IP interna desde la petición si no está seteada
+            if (log.getInternalIpAddress() == null || log.getInternalIpAddress().isEmpty()) {
+                log.setInternalIpAddress(servletRequest.getRemoteAddr());
+            }
+            // Timestamp si no está seteado
+            if (log.getTimestamp() == null) {
+                log.setTimestamp(OffsetDateTime.now());
+            }
 
             ipresolverLogRepository.save(log);
-            System.out.println("✅ Log guardado correctamente en la base de datos");
-
             return ResponseEntity.ok("Log guardado correctamente");
         } catch (Exception e) {
-            System.err.println("❌ Error al guardar log: " + e.getMessage());
             e.printStackTrace();
             return ResponseEntity.internalServerError().body("Error al guardar el log");
         }

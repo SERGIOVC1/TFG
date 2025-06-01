@@ -36,93 +36,44 @@ public class Ipresolver {
 
     private String details;
 
-    // Getters y Setters
+    @Column(name = "user_id")
+    private String userId;
 
-    public Long getId() {
-        return id;
-    }
+    // Getters y setters
 
-    public void setId(Long id) {
-        this.id = id;
-    }
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
 
-    public String getIpAddress() {
-        return ipAddress;
-    }
+    public String getIpAddress() { return ipAddress; }
+    public void setIpAddress(String ipAddress) { this.ipAddress = ipAddress; }
 
-    public void setIpAddress(String ipAddress) {
-        this.ipAddress = ipAddress;
-    }
+    public String getInternalIpAddress() { return internalIpAddress; }
+    public void setInternalIpAddress(String internalIpAddress) { this.internalIpAddress = internalIpAddress; }
 
-    public String getInternalIpAddress() {
-        return internalIpAddress;
-    }
+    public String getResult() { return result; }
+    public void setResult(String result) { this.result = result; }
 
-    public void setInternalIpAddress(String internalIpAddress) {
-        this.internalIpAddress = internalIpAddress;
-    }
+    public String getToolUsed() { return toolUsed; }
+    public void setToolUsed(String toolUsed) { this.toolUsed = toolUsed; }
 
-    public String getResult() {
-        return result;
-    }
+    public OffsetDateTime getTimestamp() { return timestamp; }
+    public void setTimestamp(OffsetDateTime timestamp) { this.timestamp = timestamp; }
 
-    public void setResult(String result) {
-        this.result = result;
-    }
+    public String getUserAgent() { return userAgent; }
+    public void setUserAgent(String userAgent) { this.userAgent = userAgent; }
 
-    public String getToolUsed() {
-        return toolUsed;
-    }
+    public Boolean getIsBot() { return isBot; }
+    public void setIsBot(Boolean isBot) { this.isBot = isBot; }
 
-    public void setToolUsed(String toolUsed) {
-        this.toolUsed = toolUsed;
-    }
+    public String getLocation() { return location; }
+    public void setLocation(String location) { this.location = location; }
 
-    public OffsetDateTime getTimestamp() {
-        return timestamp;
-    }
+    public String getAction() { return action; }
+    public void setAction(String action) { this.action = action; }
 
-    public void setTimestamp(OffsetDateTime timestamp) {
-        this.timestamp = timestamp;
-    }
+    public String getDetails() { return details; }
+    public void setDetails(String details) { this.details = details; }
 
-    public String getUserAgent() {
-        return userAgent;
-    }
-
-    public void setUserAgent(String userAgent) {
-        this.userAgent = userAgent;
-    }
-
-    public Boolean getIsBot() {
-        return isBot;
-    }
-
-    public void setIsBot(Boolean isBot) {
-        this.isBot = isBot;
-    }
-
-    public String getLocation() {
-        return location;
-    }
-
-    public void setLocation(String location) {
-        this.location = location;
-    }
-
-    public String getAction() {
-        return action;
-    }
-
-    public void setAction(String action) {
-        this.action = action;
-    }
-
-    public String getDetails() {
-        return details;
-    }
-
-    public void setDetails(String details) {
-        this.details = details;
-    }
+    public String getUserId() { return userId; }
+    public void setUserId(String userId) { this.userId = userId; }
 }

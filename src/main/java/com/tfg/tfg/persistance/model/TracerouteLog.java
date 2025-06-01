@@ -2,7 +2,6 @@ package com.tfg.tfg.persistance.model;
 
 import jakarta.persistence.*;
 import java.time.Instant;
-import java.util.List;
 
 @Entity
 @Table(name = "traceroute_log")
@@ -14,31 +13,37 @@ public class TracerouteLog {
 
     private String target;
 
-    @Column(columnDefinition = "TEXT")
+    @Lob
     private String result;
 
+    @Column(name = "tool_used")
     private String toolUsed;
 
-    @Column(columnDefinition = "timestamp with time zone")
     private Instant timestamp;
 
+    @Column(name = "user_agent")
     private String userAgent;
 
-    private Boolean isBot;
+    @Column(name = "is_bot")
+    private boolean isBot;
 
-    @Column(columnDefinition = "TEXT")
-    private String location;
-
+    @Column(name = "ip_address")
     private String ipAddress;
 
+    @Column(name = "internal_ip_address")
     private String internalIpAddress;
+
+    private String location;
 
     private String action;
 
-    @OneToMany(mappedBy = "tracerouteLog", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<TracerouteLogResult> results;
+    private String details;
+
+    @Column(name = "user_id")
+    private String userId;
 
     // Getters y setters
+    // ... (añade getters y setters para userId)
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
 
@@ -57,11 +62,8 @@ public class TracerouteLog {
     public String getUserAgent() { return userAgent; }
     public void setUserAgent(String userAgent) { this.userAgent = userAgent; }
 
-    public Boolean getIsBot() { return isBot; }
-    public void setIsBot(Boolean isBot) { this.isBot = isBot; }
-
-    public String getLocation() { return location; }
-    public void setLocation(String location) { this.location = location; }
+    public boolean isBot() { return isBot; }
+    public void setIsBot(boolean isBot) { this.isBot = isBot; }
 
     public String getIpAddress() { return ipAddress; }
     public void setIpAddress(String ipAddress) { this.ipAddress = ipAddress; }
@@ -69,9 +71,15 @@ public class TracerouteLog {
     public String getInternalIpAddress() { return internalIpAddress; }
     public void setInternalIpAddress(String internalIpAddress) { this.internalIpAddress = internalIpAddress; }
 
+    public String getLocation() { return location; }
+    public void setLocation(String location) { this.location = location; }
+
     public String getAction() { return action; }
     public void setAction(String action) { this.action = action; }
 
-    public List<TracerouteLogResult> getResults() { return results; }
-    public void setResults(List<TracerouteLogResult> results) { this.results = results; }
+    public String getDetails() { return details; }
+    public void setDetails(String details) { this.details = details; }
+
+    public String getUserId() { return userId; }
+    public void setUserId(String userId) { this.userId = userId; }
 }

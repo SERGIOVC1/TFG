@@ -1,6 +1,8 @@
+// WebScannerController.java
 package com.tfg.tfg.controllers;
 
 import com.tfg.tfg.services.WebDirectoryScannerService;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
@@ -15,8 +17,10 @@ public class WebScannerController {
         this.webDirectoryScannerService = webDirectoryScannerService;
     }
 
-    @GetMapping(value = "/directories", produces = "text/event-stream") // Cambiado de /subdomains a /directories
-    public SseEmitter scanDirectories(@RequestParam String target) {
-        return webDirectoryScannerService.scanDirectories(target); // Cambiado a scanDirectories()
+    @GetMapping(value = "/directories", produces = "text/event-stream")
+    public SseEmitter scanDirectories(
+            @RequestParam String target,
+            @RequestParam(required = false) String userId) {
+        return webDirectoryScannerService.scanDirectories(target, userId);
     }
 }

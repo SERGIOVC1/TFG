@@ -2,9 +2,7 @@ package com.tfg.tfg.controllers;
 
 import com.tfg.tfg.dto.WebScannerLogRequest;
 import com.tfg.tfg.persistance.model.WebScannerLog;
-import com.tfg.tfg.persistance.model.WebScannerResult;
 import com.tfg.tfg.persistance.repository.WebScannerLogRepository;
-import com.tfg.tfg.persistance.repository.WebScannerResultRepository;
 import com.tfg.tfg.services.NetworkScannerService;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,7 +11,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.net.InetAddress;
-import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -23,18 +20,14 @@ public class NetworkController {
 
     private final NetworkScannerService networkScannerService;
     private final WebScannerLogRepository webScannerLogRepository;
-    private final WebScannerResultRepository webScannerResultRepository;
 
     @Autowired
     public NetworkController(NetworkScannerService networkScannerService,
-                             WebScannerLogRepository webScannerLogRepository,
-                             WebScannerResultRepository webScannerResultRepository) {
+                             WebScannerLogRepository webScannerLogRepository) {
         this.networkScannerService = networkScannerService;
         this.webScannerLogRepository = webScannerLogRepository;
-        this.webScannerResultRepository = webScannerResultRepository;
     }
 
-    // 🔍 Escaneo de red
     @PostMapping("/scan")
     public ResponseEntity<Map<String, String>> scanNetwork(
             @RequestBody Map<String, String> request,
@@ -42,13 +35,15 @@ public class NetworkController {
 
         String target = request.get("target");
         String scanType = request.get("scanType");
+        String userId = request.get("userId");  // <-- Capturamos userId desde JSON
 
         if (target == null || target.isEmpty()) {
             return ResponseEntity.badRequest().body(Map.of("error", "El campo 'target' es obligatorio."));
         }
 
         try {
-            String scanResult = networkScannerService.scanNetwork(target, scanType, servletRequest);
+            // Pasamos userId al service para guardar en log
+            String scanResult = networkScannerService.scanNetwork(target, scanType, servletRequest, userId);
 
             return ResponseEntity.ok(Map.of(
                     "target", target,
@@ -62,19 +57,6 @@ public class NetworkController {
         }
     }
 
-    // 🌐 Resolver dominio a IP
-    @GetMapping("/resolve-ip")
-    public ResponseEntity<Map<String, String>> resolveIp(@RequestParam String domain) {
-        try {
-            String ip = networkScannerService.resolveUrlToIp(domain);
-            return ResponseEntity.ok(Map.of("ip", ip));
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(Map.of("error", "Error al resolver el dominio: " + e.getMessage()));
-        }
-    }
-
-    // 🧾 Guardar log desde frontend manual (opcional)
     @PostMapping("/log")
     public ResponseEntity<?> saveScanLog(
             @RequestBody WebScannerLogRequest request,
@@ -83,8 +65,8 @@ public class NetworkController {
             String internalIp = servletRequest.getRemoteAddr();
 
             WebScannerLog log = new WebScannerLog();
-            // Dentro del método saveScanLog
 
+            log.setUserId(request.getUserId());  // Guardamos userId en el log
             log.setIpAddress(request.getIpAddress());
             log.setInternalIpAddress(internalIp);
             log.setAction(request.getAction());
@@ -92,7 +74,6 @@ public class NetworkController {
             log.setResult(request.getResult());
             log.setToolUsed(request.getToolUsed());
 
-            // Convertir Long timestamp a Instant
             if (request.getTimestamp() != null) {
                 log.setTimestamp(java.time.Instant.ofEpochMilli(request.getTimestamp()));
             } else {
@@ -109,17 +90,6 @@ public class NetworkController {
 
         } catch (Exception e) {
             return ResponseEntity.status(500).body("Error al guardar log: " + e.getMessage());
-        }
-    }
-
-    // 📊 Obtener los puertos por ID de log (extra)
-    @GetMapping("/logs/{logId}/ports")
-    public ResponseEntity<?> getPortsByLog(@PathVariable Long logId) {
-        try {
-            List<WebScannerResult> ports = webScannerResultRepository.findByLogId(logId);
-            return ResponseEntity.ok(ports);
-        } catch (Exception e) {
-            return ResponseEntity.status(500).body("Error al obtener puertos: " + e.getMessage());
         }
     }
 }

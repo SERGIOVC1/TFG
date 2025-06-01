@@ -1,3 +1,4 @@
+// WebDirectoryScannerService.java
 package com.tfg.tfg.services;
 
 import com.tfg.tfg.persistance.model.WebDirectoryLog;
@@ -21,7 +22,7 @@ public class WebDirectoryScannerService {
         this.logRepository = logRepository;
     }
 
-    public SseEmitter scanDirectories(String target) {
+    public SseEmitter scanDirectories(String target, String userId) {
         SseEmitter emitter = new SseEmitter();
         new Thread(() -> {
             try {
@@ -51,9 +52,9 @@ public class WebDirectoryScannerService {
                     Matcher matcher = resultPattern.matcher(line);
                     if (matcher.find()) {
                         int status = Integer.parseInt(matcher.group(2));
-                        // Solo guardar códigos útiles (200 OK, 301/302 redirect, 303 See Other)
                         if (status == 200 || status == 301 || status == 302 || status == 303) {
                             WebDirectoryLog log = new WebDirectoryLog();
+                            log.setUserId(userId);
                             log.setAction("Directory Scan");
                             log.setDetails(target);
                             log.setIpAddress(publicIp);

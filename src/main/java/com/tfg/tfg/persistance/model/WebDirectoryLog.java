@@ -1,3 +1,4 @@
+// WebDirectoryLog.java
 package com.tfg.tfg.persistance.model;
 
 import jakarta.persistence.*;
@@ -9,6 +10,8 @@ public class WebDirectoryLog {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    private String userId;
 
     private String ipAddress;
     private String internalIpAddress;
@@ -24,6 +27,9 @@ public class WebDirectoryLog {
     // Getters y Setters
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
+
+    public String getUserId() { return userId; }
+    public void setUserId(String userId) { this.userId = userId; }
 
     public String getIpAddress() { return ipAddress; }
     public void setIpAddress(String ipAddress) { this.ipAddress = ipAddress; }

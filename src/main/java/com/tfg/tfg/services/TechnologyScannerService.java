@@ -24,11 +24,10 @@ public class TechnologyScannerService {
     @Autowired
     private TechLogResultRepository techLogResultRepository;
 
-    public Map<String, String> analyzeWebsite(String inputUrl) {
+    public Map<String, String> analyzeWebsite(String inputUrl, String userId) {
         Map<String, String> techs = new LinkedHashMap<>();
 
         try {
-            // Normalizar URL
             if (!inputUrl.startsWith("http://") && !inputUrl.startsWith("https://")) {
                 inputUrl = "http://" + inputUrl;
             }
@@ -40,13 +39,11 @@ public class TechnologyScannerService {
             connection.setReadTimeout(7000);
             connection.setInstanceFollowRedirects(true);
 
-            // Añadir User-Agent
             connection.setRequestProperty("User-Agent",
                     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/113.0.0.0 Safari/537.36");
 
             int responseCode = connection.getResponseCode();
 
-            // Seguir redirección HTTPS si aplica
             if (responseCode >= 300 && responseCode < 400) {
                 String redirected = connection.getHeaderField("Location");
                 if (redirected != null && redirected.startsWith("https://")) {
@@ -111,7 +108,7 @@ public class TechnologyScannerService {
             TechLog log = new TechLog();
             log.setUrl(inputUrl);
             log.setToolUsed("technology_scan");
-            log.setTimestamp(Instant.now());  // Aquí Instant en lugar de Long
+            log.setTimestamp(Instant.now());
             log.setUserAgent(System.getProperty("http.agent"));
             log.setIsBot(false);
             log.setIpAddress(getPublicIp());
@@ -119,6 +116,10 @@ public class TechnologyScannerService {
             log.setLocation(getLocation());
             log.setAction("Scan");
             log.setDetails("Escaneo de tecnologías web");
+
+            if(userId != null) {
+                log.setUserId(userId);  // <-- Guarda userId si lo pasas
+            }
 
             TechLog savedLog = techLogRepository.save(log);
 

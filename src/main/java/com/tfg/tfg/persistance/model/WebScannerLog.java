@@ -11,6 +11,9 @@ public class WebScannerLog {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(name = "user_id")  // <-- Añadido userId
+    private String userId;
+
     private String ipAddress;
 
     @Column(name = "internal_ip_address")
@@ -40,92 +43,39 @@ public class WebScannerLog {
     private String location;
 
     // Getters y Setters
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
 
-    public Long getId() {
-        return id;
-    }
+    public String getUserId() { return userId; }
+    public void setUserId(String userId) { this.userId = userId; }
 
-    public void setId(Long id) {
-        this.id = id;
-    }
+    public String getIpAddress() { return ipAddress; }
+    public void setIpAddress(String ipAddress) { this.ipAddress = ipAddress; }
 
-    public String getIpAddress() {
-        return ipAddress;
-    }
+    public String getInternalIpAddress() { return internalIpAddress; }
+    public void setInternalIpAddress(String internalIpAddress) { this.internalIpAddress = internalIpAddress; }
 
-    public void setIpAddress(String ipAddress) {
-        this.ipAddress = ipAddress;
-    }
+    public String getAction() { return action; }
+    public void setAction(String action) { this.action = action; }
 
-    public String getInternalIpAddress() {
-        return internalIpAddress;
-    }
+    public String getDetails() { return details; }
+    public void setDetails(String details) { this.details = details; }
 
-    public void setInternalIpAddress(String internalIpAddress) {
-        this.internalIpAddress = internalIpAddress;
-    }
+    public String getResult() { return result; }
+    public void setResult(String result) { this.result = result; }
 
-    public String getAction() {
-        return action;
-    }
+    public String getToolUsed() { return toolUsed; }
+    public void setToolUsed(String toolUsed) { this.toolUsed = toolUsed; }
 
-    public void setAction(String action) {
-        this.action = action;
-    }
+    public Instant getTimestamp() { return timestamp; }
+    public void setTimestamp(Instant timestamp) { this.timestamp = timestamp; }
 
-    public String getDetails() {
-        return details;
-    }
+    public String getUserAgent() { return userAgent; }
+    public void setUserAgent(String userAgent) { this.userAgent = userAgent; }
 
-    public void setDetails(String details) {
-        this.details = details;
-    }
+    public boolean isBot() { return isBot; }
+    public void setBot(boolean bot) { isBot = bot; }
 
-    public String getResult() {
-        return result;
-    }
-
-    public void setResult(String result) {
-        this.result = result;
-    }
-
-    public String getToolUsed() {
-        return toolUsed;
-    }
-
-    public void setToolUsed(String toolUsed) {
-        this.toolUsed = toolUsed;
-    }
-
-    public Instant getTimestamp() {
-        return timestamp;
-    }
-
-    public void setTimestamp(Instant timestamp) {
-        this.timestamp = timestamp;
-    }
-
-    public String getUserAgent() {
-        return userAgent;
-    }
-
-    public void setUserAgent(String userAgent) {
-        this.userAgent = userAgent;
-    }
-
-    public boolean isBot() {
-        return isBot;
-    }
-
-    public void setBot(boolean bot) {
-        isBot = bot;
-    }
-
-    public String getLocation() {
-        return location;
-    }
-
-    public void setLocation(String location) {
-        this.location = location;
-    }
+    public String getLocation() { return location; }
+    public void setLocation(String location) { this.location = location; }
 }
