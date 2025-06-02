@@ -14,12 +14,12 @@ import java.util.*;
 public class LinkService {
 
     private final Map<String, String> urlMap = new HashMap<>();
-    private final Map<String, Deque<LinkLog>> logsMap = new HashMap<>(); // Máximo 5 logs por código
+    private final Map<String, Deque<LinkLog>> logsMap = new HashMap<>();
 
     public String createShortCode(String originalUrl) {
         String code = UUID.randomUUID().toString().substring(0, 6);
         urlMap.put(code, originalUrl);
-        logsMap.put(code, new LinkedList<>()); // Inicializar cola de logs vacía
+        logsMap.put(code, new LinkedList<>());
         return code;
     }
 

@@ -19,7 +19,6 @@ public class LinkController {
     @Autowired
     private LinkService linkService;
 
-    // 🔗 Generar enlace acortado
     @PostMapping
     public ResponseEntity<?> generateLink(@RequestBody Map<String, String> payload) {
         String originalUrl = payload.get("url");
@@ -32,14 +31,12 @@ public class LinkController {
         return ResponseEntity.ok(Map.of("shortened", finalLink, "code", code));
     }
 
-    // 🚀 Redireccionar y registrar visita
     @GetMapping("/go/{code}")
     public RedirectView redirectAndLog(@PathVariable String code, HttpServletRequest request) {
         String original = linkService.trackAndRedirect(code, request);
         return new RedirectView(original != null ? original : "https://example.com");
     }
 
-    // 📊 Obtener logs de visitas
     @GetMapping("/logs/{code}")
     public ResponseEntity<List<LinkLog>> getLogs(@PathVariable String code) {
         List<LinkLog> logs = linkService.getLogsForCode(code);
