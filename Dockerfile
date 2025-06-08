@@ -11,4 +11,4 @@ RUN chmod +x mvnw
 RUN ./mvnw package -DskipTests
 
 # Ejecuta el JAR generado
-CMD ["java", "-jar", "target/tfg-backend-0.0.1-SNAPSHOT.jar"]
+CMD ["java", "-jar", "target/tfg-0.0.1-SNAPSHOT.jar"]
