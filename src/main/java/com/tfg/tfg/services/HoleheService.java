@@ -2,120 +2,105 @@ package com.tfg.tfg.services;
 
 import com.tfg.tfg.persistance.model.HoleheLog;
 import com.tfg.tfg.persistance.repository.HoleheLogRepository;
-import org.springframework.core.io.ClassPathResource;
+import jakarta.servlet.http.HttpServletRequest;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.io.BufferedReader;
-import java.io.File;
 import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
 import java.net.InetAddress;
+import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 
-@Service  // Marca la clase como servicio gestionado por Spring
+@Service
 public class HoleheService {
 
-    private final HoleheLogRepository holeheLogRepository;  // Repositorio para guardar logs en base de datos
-
-    // Constructor para inyección del repositorio
-    public HoleheService(HoleheLogRepository holeheLogRepository) {
-        this.holeheLogRepository = holeheLogRepository;
-    }
+    @Autowired
+    private HoleheLogRepository holeheLogRepository;
 
     /**
-     * Ejecuta la herramienta externa 'holehe' para escanear un email.
-     * @param email email a escanear
-     * @return salida completa de la ejecución como String
+     * Realiza una solicitud HTTP al microservicio de holehe para escanear el email.
+     * @param email Email a verificar
+     * @param request Petición HTTP original
+     * @param userId ID del usuario
+     * @return Resultado en texto plano
      */
-    public String runHolehe(String email) {
+    public String runHolehe(String email, HttpServletRequest request, String userId) {
         StringBuilder output = new StringBuilder();
 
         try {
-            // Obtiene el archivo .bat desde recursos para ejecutarlo
-            File batFile = new ClassPathResource("bin/holehe-wrapper.bat").getFile();
-            String batPath = batFile.getAbsolutePath();
+            // 🌐 URL pública del microservicio holehe vía ngrok
+            String microserviceUrl = "https://2fa4-84-125-184-18.ngrok-free.app/scan/holehe";
 
-            // Crea un proceso para ejecutar el comando bat con el email como argumento
-            ProcessBuilder pb = new ProcessBuilder("cmd.exe", "/c", batPath, email);
-            pb.redirectErrorStream(true); // Redirige errores a la salida estándar
+            // Monta el JSON de entrada
+            String jsonInputString = String.format("{\"email\": \"%s\"}", email);
 
-            Process process = pb.start();  // Inicia el proceso
+            // Crea conexión HTTP
+            URL url = new URL(microserviceUrl);
+            HttpURLConnection con = (HttpURLConnection) url.openConnection();
+            con.setRequestMethod("POST");
+            con.setRequestProperty("Content-Type", "application/json");
+            con.setDoOutput(true);
 
-            StringBuilder resultData = new StringBuilder();
+            // Envía JSON
+            try (var os = con.getOutputStream()) {
+                byte[] input = jsonInputString.getBytes(StandardCharsets.UTF_8);
+                os.write(input, 0, input.length);
+            }
 
-            // Lee línea a línea la salida del proceso
-            try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
+            // Lee respuesta
+            try (var reader = new BufferedReader(new InputStreamReader(con.getInputStream(), StandardCharsets.UTF_8))) {
                 String line;
                 while ((line = reader.readLine()) != null) {
-                    output.append(line).append("\n");  // Guarda toda la salida
-
-                    // Filtra líneas relevantes que empiezan por [+], ignorando ciertos textos
-                    if (line.trim().startsWith("[+]") &&
-                        !line.contains("Email used") &&
-                        !line.contains("Email not used") &&
-                        !line.contains("Rate limit")) {
-                        resultData.append(line.trim()).append(", ");
-                    }
+                    output.append(line).append("\n");
                 }
             }
 
-            // Espera a que el proceso termine y revisa código de salida
-            int exitCode = process.waitFor();
-            if (exitCode != 0) {
-                output.append("⚠️ Error al ejecutar holehe. Código de salida: ").append(exitCode);
-            }
+            con.disconnect();
 
-            // Quita la última coma y espacio de resultData
-            String result = resultData.toString().replaceAll(",\\s*$", "");
-
-            // Si hay resultado relevante, crea y guarda el log en la base de datos
-            if (!result.isEmpty()) {
+            // Guarda log si hubo salida válida
+            if (!output.toString().isBlank()) {
                 HoleheLog log = new HoleheLog();
+                log.setUserId(userId);
                 log.setAction("Email Scan");
                 log.setDetails(email);
-                log.setIpAddress(getPublicIp());  // Obtiene IP pública actual
-                log.setInternalIpAddress(InetAddress.getLocalHost().getHostAddress());  // IP interna local
-                log.setResult(result);
+                log.setIpAddress(getPublicIp());
+                log.setInternalIpAddress(InetAddress.getLocalHost().getHostAddress());
+                log.setResult(output.toString());
                 log.setToolUsed("holehe");
-                log.setTimestamp(Instant.ofEpochMilli(System.currentTimeMillis()));  // Timestamp actual
-                log.setUserAgent(System.getProperty("http.agent"));  // Agente HTTP (browser info)
+                log.setTimestamp(Instant.now());
+                log.setUserAgent(request.getHeader("User-Agent"));
                 log.setIsBot(false);
-                log.setLocation(getLocation());  // Ubicación aproximada por IP
+                log.setLocation(getLocation());
 
-                holeheLogRepository.save(log);  // Guarda en BD
+                holeheLogRepository.save(log);
             }
 
         } catch (Exception e) {
-            e.printStackTrace(); // Imprime error en consola si falla ejecución
-            output.append("❌ Error al ejecutar holehe: ").append(e.getMessage());
+            output.append("❌ Error al consultar el microservicio holehe: ").append(e.getMessage());
+            e.printStackTrace();
         }
 
-        return output.toString();  // Devuelve toda la salida del comando
+        return output.toString();
     }
 
-    /**
-     * Método para obtener la IP pública consultando un servicio externo
-     * @return IP pública como String o "Desconocida" si falla
-     */
     private String getPublicIp() {
         try {
-            var url = new java.net.URL("https://api.ipify.org");
-            try (var in = new BufferedReader(new InputStreamReader(url.openStream()))) {
+            URL url = new URL("https://api.ipify.org");
+            try (BufferedReader in = new BufferedReader(new InputStreamReader(url.openStream()))) {
                 return in.readLine();
             }
         } catch (Exception e) {
-            e.printStackTrace();
             return "Desconocida";
         }
     }
 
-    /**
-     * Método para obtener la ubicación aproximada consultando servicio externo
-     * @return ubicación (ciudad, país) o "Desconocida" si falla
-     */
     private String getLocation() {
         try {
-            var url = new java.net.URL("https://ipapi.co/json/");
-            try (var in = new BufferedReader(new InputStreamReader(url.openStream()))) {
+            URL url = new URL("https://ipapi.co/json/");
+            try (BufferedReader in = new BufferedReader(new InputStreamReader(url.openStream()))) {
                 StringBuilder json = new StringBuilder();
                 String line;
                 while ((line = in.readLine()) != null) {
@@ -123,18 +108,17 @@ public class HoleheService {
                 }
 
                 String jsonStr = json.toString();
+                String city = jsonStr.matches(".*\"city\":\"[^\"]+\".*")
+                        ? jsonStr.replaceAll(".*\"city\":\"([^\"]+)\".*", "$1")
+                        : "";
+                String country = jsonStr.matches(".*\"country_name\":\"[^\"]+\".*")
+                        ? jsonStr.replaceAll(".*\"country_name\":\"([^\"]+)\".*", "$1")
+                        : "";
 
-                // Extrae ciudad y país usando expresiones regulares simples
-                String city = jsonStr.matches(".*\"city\":\"[^\"]+\".*") ?
-                        jsonStr.replaceAll(".*\"city\":\"([^\"]+)\".*", "$1") : "";
-                String country = jsonStr.matches(".*\"country_name\":\"[^\"]+\".*") ?
-                        jsonStr.replaceAll(".*\"country_name\":\"([^\"]+)\".*", "$1") : "";
-
-                String location = (city + ", " + country).trim();
-                return location.isBlank() ? "Desconocida" : location;
+                String loc = (city + ", " + country).trim();
+                return loc.isBlank() ? "Desconocida" : loc;
             }
         } catch (Exception e) {
-            e.printStackTrace(); // Log de error para debugging
             return "Desconocida";
         }
     }
