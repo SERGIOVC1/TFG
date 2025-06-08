@@ -24,7 +24,7 @@ public class HoleheService {
         StringBuilder output = new StringBuilder();
 
         try {
-            URL url = new URL("http://4.233.136.111:3000/scan/holehe"); // tu IP de VM
+            URL url = new URL("http://4.233.138.85:3000/scan/holehe"); // tu IP de VM
             HttpURLConnection conn = (HttpURLConnection) url.openConnection();
             conn.setRequestMethod("POST");
             conn.setRequestProperty("Content-Type", "application/json");

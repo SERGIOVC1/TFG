@@ -28,7 +28,7 @@ public class WebDirectoryScannerService {
         new Thread(() -> {
             try {
                 // Realiza la conexión a tu servidor en la VM
-                URL url = new URL("http://4.233.136.111:3000/scan/gobuster"); // IP de tu VM
+                URL url = new URL("http://4.233.138.85:3000/scan/gobuster"); // IP de tu VM
                 HttpURLConnection conn = (HttpURLConnection) url.openConnection();
                 conn.setRequestMethod("POST");
                 conn.setRequestProperty("Content-Type", "application/json");
