@@ -36,7 +36,8 @@ public class NetworkScannerService {
             ip = resolveUrlToIp(target);
         }
 
-        String result = forwardToMicroservice(ip, scanType);
+        // ⚠️ Fuerza siempre el tipo "basic" para evitar errores por falta de privilegios
+        String result = forwardToMicroservice(ip, "basic");
 
         WebScannerLog log = new WebScannerLog();
         log.setUserId(userId);
@@ -54,7 +55,6 @@ public class NetworkScannerService {
         WebScannerLog savedLog = logRepository.save(log);
 
         List<WebScannerResult> parsedResults = new ArrayList<>();
-
         for (String line : result.split("\n")) {
             Matcher matcher = Pattern.compile("(\\d+/tcp)\\s+(\\w+)\\s+(\\S+)").matcher(line);
             if (matcher.find()) {
@@ -73,8 +73,8 @@ public class NetworkScannerService {
     }
 
     public String forwardToMicroservice(String target, String scanType) throws Exception {
-        // 🔁 URL actual de tu túnel ngrok (cámbiala cada vez que reinicies ngrok)
-        String microserviceUrl = "https://5718-84-125-184-18.ngrok-free.app/scan/nmap";
+        // 🛠️ Actualiza esta URL con la última que te dé ngrok
+        String microserviceUrl = "https://50a5-84-125-184-18.ngrok-free.app/scan/nmap";
 
         String jsonInputString = String.format("{\"target\": \"%s\", \"scanType\": \"%s\"}", target, scanType);
 
