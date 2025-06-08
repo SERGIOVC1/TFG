@@ -22,10 +22,9 @@ public class HoleheService {
 
     public String runHolehe(String email) {
         StringBuilder output = new StringBuilder();
-        StringBuilder resultData = new StringBuilder();
 
         try {
-            URL url = new URL("http://4.233.136.111:3000/scan/holehe"); // IP pública de tu VM
+            URL url = new URL("http://4.233.136.111:3000/scan/holehe"); // tu IP de VM
             HttpURLConnection conn = (HttpURLConnection) url.openConnection();
             conn.setRequestMethod("POST");
             conn.setRequestProperty("Content-Type", "application/json");
@@ -36,10 +35,12 @@ public class HoleheService {
                 os.write(json.getBytes(StandardCharsets.UTF_8));
             }
 
+            StringBuilder resultData = new StringBuilder();
             try (BufferedReader reader = new BufferedReader(new InputStreamReader(conn.getInputStream()))) {
                 String line;
                 while ((line = reader.readLine()) != null) {
                     output.append(line).append("\n");
+
                     if (line.trim().startsWith("[+]") &&
                         !line.contains("Email used") &&
                         !line.contains("Email not used") &&
@@ -50,6 +51,7 @@ public class HoleheService {
             }
 
             String result = resultData.toString().replaceAll(",\\s*$", "");
+
             if (!result.isEmpty()) {
                 HoleheLog log = new HoleheLog();
                 log.setAction("Email Scan");
@@ -58,15 +60,16 @@ public class HoleheService {
                 log.setInternalIpAddress(InetAddress.getLocalHost().getHostAddress());
                 log.setResult(result);
                 log.setToolUsed("holehe");
-                log.setTimestamp(Instant.ofEpochMilli(System.currentTimeMillis()));
+                log.setTimestamp(Instant.now());
                 log.setUserAgent(System.getProperty("http.agent"));
                 log.setIsBot(false);
                 log.setLocation(getLocation());
+
                 holeheLogRepository.save(log);
             }
 
         } catch (Exception e) {
-            output.append("❌ Error al ejecutar Holehe: ").append(e.getMessage());
+            output.append("❌ Error al ejecutar holehe: ").append(e.getMessage());
         }
 
         return output.toString();
@@ -74,8 +77,8 @@ public class HoleheService {
 
     private String getPublicIp() {
         try {
-            var url = new URL("https://api.ipify.org");
-            try (var in = new BufferedReader(new InputStreamReader(url.openStream()))) {
+            URL url = new URL("https://api.ipify.org");
+            try (BufferedReader in = new BufferedReader(new InputStreamReader(url.openStream()))) {
                 return in.readLine();
             }
         } catch (Exception e) {
@@ -85,8 +88,8 @@ public class HoleheService {
 
     private String getLocation() {
         try {
-            var url = new URL("https://ipapi.co/json/");
-            try (var in = new BufferedReader(new InputStreamReader(url.openStream()))) {
+            URL url = new URL("https://ipapi.co/json/");
+            try (BufferedReader in = new BufferedReader(new InputStreamReader(url.openStream()))) {
                 StringBuilder json = new StringBuilder();
                 String line;
                 while ((line = in.readLine()) != null) {
@@ -99,8 +102,7 @@ public class HoleheService {
                 String country = jsonStr.matches(".*\"country_name\":\"[^\"]+\".*")
                         ? jsonStr.replaceAll(".*\"country_name\":\"([^\"]+)\".*", "$1") : "";
 
-                String location = (city + ", " + country).trim();
-                return location.isBlank() ? "Desconocida" : location;
+                return (city + ", " + country).trim().isEmpty() ? "Desconocida" : (city + ", " + country).trim();
             }
         } catch (Exception e) {
             return "Desconocida";
