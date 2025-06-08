@@ -10,8 +10,10 @@ import org.springframework.stereotype.Service;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
 import java.net.InetAddress;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
@@ -28,21 +30,13 @@ public class NetworkScannerService {
     private WebScannerResultRepository resultRepository;
 
     public String scanNetwork(String target, String scanType, HttpServletRequest request, String userId) throws Exception {
-        String resolvedTarget = isValidUrl(target) ? resolveUrlToIp(target) : target;
+        String ip = target;
 
-        String command = buildCommand(scanType, resolvedTarget);
-        Process process = Runtime.getRuntime().exec(command);
-
-        StringBuilder output = new StringBuilder();
-        try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
-            String line;
-            while ((line = reader.readLine()) != null) {
-                output.append(line).append("\n");
-            }
+        if (isValidUrl(target)) {
+            ip = resolveUrlToIp(target);
         }
 
-        process.waitFor();
-        String result = output.toString();
+        String result = forwardToMicroservice(ip, scanType);
 
         WebScannerLog log = new WebScannerLog();
         log.setUserId(userId);
@@ -51,7 +45,7 @@ public class NetworkScannerService {
         log.setAction("Network Scan");
         log.setDetails(target);
         log.setResult(result);
-        log.setToolUsed("nmap");
+        log.setToolUsed("network_scan");
         log.setTimestamp(Instant.now());
         log.setUserAgent(request.getHeader("User-Agent"));
         log.setBot(false);
@@ -59,57 +53,73 @@ public class NetworkScannerService {
 
         WebScannerLog savedLog = logRepository.save(log);
 
-        List<WebScannerResult> parsedResults = parseScanResults(result, savedLog);
+        List<WebScannerResult> parsedResults = new ArrayList<>();
+
+        for (String line : result.split("\n")) {
+            Matcher matcher = Pattern.compile("(\\d+/tcp)\\s+(\\w+)\\s+(\\S+)").matcher(line);
+            if (matcher.find()) {
+                WebScannerResult entry = new WebScannerResult();
+                entry.setLog(savedLog);
+                entry.setPort(matcher.group(1));
+                entry.setState(matcher.group(2));
+                entry.setService(matcher.group(3));
+                parsedResults.add(entry);
+            }
+        }
+
         resultRepository.saveAll(parsedResults);
 
         return result;
     }
 
-    private List<WebScannerResult> parseScanResults(String scanOutput, WebScannerLog log) {
-        List<WebScannerResult> results = new ArrayList<>();
-        String[] lines = scanOutput.split("\n");
-        Pattern pattern = Pattern.compile("(\\d+/tcp)\\s+(open|closed|filtered)\\s+(\\S+)");
+    public String forwardToMicroservice(String target, String scanType) throws Exception {
+        // Reemplaza con tu propia URL pública de ngrok
+        String microserviceUrl = "https://4f00-84-125-184-18.ngrok-free.app/scan/nmap";
 
-        for (String line : lines) {
-            Matcher matcher = pattern.matcher(line);
-            if (matcher.find()) {
-                WebScannerResult entry = new WebScannerResult();
-                entry.setLog(log);
-                entry.setPort(matcher.group(1));
-                entry.setState(matcher.group(2));
-                entry.setService(matcher.group(3));
-                results.add(entry);
+        String jsonInputString = String.format("{\"target\": \"%s\", \"scanType\": \"%s\"}", target, scanType);
+
+        URL url = new URL(microserviceUrl);
+        HttpURLConnection con = (HttpURLConnection) url.openConnection();
+        con.setRequestMethod("POST");
+        con.setRequestProperty("Content-Type", "application/json");
+        con.setDoOutput(true);
+
+        try (var os = con.getOutputStream()) {
+            byte[] input = jsonInputString.getBytes(StandardCharsets.UTF_8);
+            os.write(input, 0, input.length);
+        }
+
+        StringBuilder response = new StringBuilder();
+        try (var br = new BufferedReader(new InputStreamReader(con.getInputStream(), StandardCharsets.UTF_8))) {
+            String line;
+            while ((line = br.readLine()) != null) {
+                response.append(line).append("\n");
             }
         }
-        return results;
+
+        con.disconnect();
+        return response.toString();
     }
 
-    private boolean isValidUrl(String url) {
-        String regex = "^(https?://)?([a-zA-Z0-9-]+\\.)+[a-zA-Z]{2,}(:\\d+)?(/.*)?$";
-        return url.matches(regex);
-    }
-
-    private String resolveUrlToIp(String url) throws Exception {
+    public String resolveUrlToIp(String url) throws Exception {
         try {
-            return InetAddress.getByName(url).getHostAddress();
+            InetAddress inetAddress = InetAddress.getByName(url);
+            return inetAddress.getHostAddress();
         } catch (Exception e) {
             throw new Exception("Error al resolver la URL: " + e.getMessage());
         }
     }
 
-    private String buildCommand(String scanType, String target) {
-        return switch (scanType) {
-            case "intermediate" -> "/usr/bin/nmap -sV -sC -sS " + target;
-            case "deep" -> "/usr/bin/nmap -sV -sC -T4 -A " + target;
-            default -> "/usr/bin/nmap -sV -sC " + target;
-        };
+    private boolean isValidUrl(String url) {
+        String regex = "^(https?://)?([a-z0-9-]+\\.)+[a-z0-9]{2,4}(:[0-9]{1,5})?(\\/.*)?$";
+        return url.matches(regex);
     }
 
     private String getPublicIp() {
         try {
             URL url = new URL("https://api.ipify.org");
-            try (BufferedReader reader = new BufferedReader(new InputStreamReader(url.openStream()))) {
-                return reader.readLine();
+            try (BufferedReader in = new BufferedReader(new InputStreamReader(url.openStream()))) {
+                return in.readLine();
             }
         } catch (Exception e) {
             return "Desconocida";
@@ -119,10 +129,10 @@ public class NetworkScannerService {
     private String getLocation() {
         try {
             URL url = new URL("https://ipapi.co/json/");
-            try (BufferedReader reader = new BufferedReader(new InputStreamReader(url.openStream()))) {
+            try (BufferedReader in = new BufferedReader(new InputStreamReader(url.openStream()))) {
                 StringBuilder json = new StringBuilder();
                 String line;
-                while ((line = reader.readLine()) != null) {
+                while ((line = in.readLine()) != null) {
                     json.append(line);
                 }
 
@@ -133,6 +143,7 @@ public class NetworkScannerService {
                 String country = jsonStr.matches(".*\"country_name\":\"[^\"]+\".*")
                         ? jsonStr.replaceAll(".*\"country_name\":\"([^\"]+)\".*", "$1")
                         : "";
+
                 String loc = (city + ", " + country).trim();
                 return loc.isBlank() ? "Desconocida" : loc;
             }

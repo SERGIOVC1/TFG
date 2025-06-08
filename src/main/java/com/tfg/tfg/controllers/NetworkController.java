@@ -10,7 +10,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.time.Instant;
+import java.net.InetAddress;
+import java.util.HashMap;
 import java.util.Map;
 
 @RestController
@@ -28,32 +29,44 @@ public class NetworkController {
         this.webScannerLogRepository = webScannerLogRepository;
     }
 
-    /**
-     * Endpoint principal para realizar escaneos de red (usando Nmap).
-     */
     @PostMapping("/scan")
     public ResponseEntity<Map<String, String>> scanNetwork(
             @RequestBody Map<String, String> request,
             HttpServletRequest servletRequest) {
 
         String target = request.get("target");
-        String scanType = request.getOrDefault("scanType", "basic");
-        String userId = request.getOrDefault("userId", "anonymous");
+        String scanType = request.get("scanType");
+        String userId = request.get("userId");
 
-        if (target == null || target.isBlank()) {
-            return ResponseEntity.badRequest().body(
-                    Map.of("error", "El campo 'target' es obligatorio.")
-            );
+        if (target == null || target.isEmpty()) {
+            return ResponseEntity.badRequest().body(Map.of("error", "El campo 'target' es obligatorio."));
         }
 
         try {
-            String scanResult = networkScannerService.scanNetwork(target, scanType, servletRequest, userId);
+            // Redirige la petición al microservicio Node.js vía HTTP
+            String scanResult = networkScannerService.forwardToMicroservice(target, scanType);
 
-            return ResponseEntity.ok(Map.of(
-                    "target", target,
-                    "scanType", scanType,
-                    "result", scanResult
-            ));
+            // Log opcional si quieres guardar desde aquí (alternativa a /log)
+            WebScannerLog log = new WebScannerLog();
+            log.setUserId(userId);
+            log.setIpAddress(servletRequest.getRemoteAddr());
+            log.setInternalIpAddress(InetAddress.getLocalHost().getHostAddress());
+            log.setAction("Network Scan");
+            log.setDetails(target);
+            log.setResult(scanResult);
+            log.setToolUsed("microservice_nmap");
+            log.setTimestamp(java.time.Instant.now());
+            log.setUserAgent(servletRequest.getHeader("User-Agent"));
+            log.setBot(false);
+            log.setLocation("Desconocida");
+            webScannerLogRepository.save(log);
+
+            Map<String, String> response = new HashMap<>();
+            response.put("target", target);
+            response.put("scanType", scanType);
+            response.put("result", scanResult);
+
+            return ResponseEntity.ok(response);
 
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
@@ -61,9 +74,6 @@ public class NetworkController {
         }
     }
 
-    /**
-     * Endpoint alternativo para guardar logs manualmente (si se desea).
-     */
     @PostMapping("/log")
     public ResponseEntity<?> saveScanLog(
             @RequestBody WebScannerLogRequest request,
@@ -80,19 +90,22 @@ public class NetworkController {
             log.setDetails(request.getDetails());
             log.setResult(request.getResult());
             log.setToolUsed(request.getToolUsed());
-            log.setTimestamp(request.getTimestamp() != null ?
-                    Instant.ofEpochMilli(request.getTimestamp()) : Instant.now());
+
+            if (request.getTimestamp() != null) {
+                log.setTimestamp(java.time.Instant.ofEpochMilli(request.getTimestamp()));
+            } else {
+                log.setTimestamp(java.time.Instant.now());
+            }
+
             log.setUserAgent(request.getUserAgent());
             log.setBot(request.isBot());
             log.setLocation(request.getLocation());
 
             webScannerLogRepository.save(log);
-
             return ResponseEntity.ok("Log guardado correctamente");
 
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body("Error al guardar log: " + e.getMessage());
+            return ResponseEntity.status(500).body("Error al guardar log: " + e.getMessage());
         }
     }
 }
