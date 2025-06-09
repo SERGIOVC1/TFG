@@ -32,7 +32,7 @@ public class HoleheService {
 
         try {
             // 🌐 URL pública del microservicio holehe vía ngrok
-            String microserviceUrl = "https://2fa4-84-125-184-18.ngrok-free.app/scan/holehe";
+            String microserviceUrl = "https://eb68-84-125-184-18.ngrok-free.app/scan/holehe";
 
             // Monta el JSON de entrada
             String jsonInputString = String.format("{\"email\": \"%s\"}", email);
