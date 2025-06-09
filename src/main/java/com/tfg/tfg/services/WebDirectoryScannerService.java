@@ -30,7 +30,7 @@ public class WebDirectoryScannerService {
 
         new Thread(() -> {
             try {
-                String microserviceUrl = "https://5b65-84-125-184-18.ngrok-free.app/scan/gobuster";
+                String microserviceUrl = "https://e766-84-125-184-18.ngrok-free.app/scan/gobuster";
                 String jsonInput = String.format("{\"target\":\"%s\"}", target);
 
                 URL url = new URL(microserviceUrl);
