@@ -55,18 +55,9 @@ public class TracerouteService {
     public List<String> executeTraceroute(String target, String userId) {
         List<String> tracerouteOutput = new ArrayList<>();
         try {
-            ProcessBuilder pb = new ProcessBuilder("traceroute", target);
-            pb.redirectErrorStream(true);
-            Process process = pb.start();
-
-            BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
-            String line;
-            while ((line = reader.readLine()) != null) {
-                tracerouteOutput.add(line);
-            }
-            reader.close();
-            process.waitFor();
-
+            // Render NO permite traceroute. Simulamos respuesta segura.
+            tracerouteOutput.add("Error: Comando 'traceroute' no permitido en entorno de producción.");
+            
             TracerouteLog log = new TracerouteLog();
             log.setTarget(target);
             log.setResult(String.join("\n", tracerouteOutput));
@@ -77,7 +68,7 @@ public class TracerouteService {
             log.setIpAddress(getPublicIp());
             log.setInternalIpAddress(InetAddress.getLocalHost().getHostAddress());
             log.setLocation(getLocation());
-            log.setAction("Traceroute ejecutado");
+            log.setAction("Traceroute fallido: comando bloqueado.");
             if (userId != null && !userId.isEmpty()) {
                 log.setUserId(userId);
             }
