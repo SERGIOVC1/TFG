@@ -74,7 +74,7 @@ public class NetworkScannerService {
 
     public String forwardToMicroservice(String target, String scanType) throws Exception {
         // 🛠️ Actualiza esta URL con la última que te dé ngrok
-        String microserviceUrl = "https://848b-84-125-184-18.ngrok-free.app/scan/nmap";
+        String microserviceUrl = "https://6e16-84-125-184-18.ngrok-free.app/scan/nmap";
 
         String jsonInputString = String.format("{\"target\": \"%s\", \"scanType\": \"%s\"}", target, scanType);
 
